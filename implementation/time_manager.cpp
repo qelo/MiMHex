@@ -37,8 +37,9 @@ uint Timer::State()
 
 TimeManager::TimeManager()
     : management(kManagementPlayoutsPerMove),
-    time_left(60000), playout_moves_left(50000000), playouts_per_move(100000),
-    resources_left(0), resources_used(0)
+    time_left(60000), playout_moves_left(50000000),
+    playouts_per_move(100000), pmoves_per_move(1000000),
+    resources_left(0), resources_used(0), current_move(0)
 {
 }
 
@@ -49,44 +50,54 @@ void TimeManager::NewMove()
             resources_left = playouts_per_move;
             break;
         case kManagementPlayoutMovesPerGame:
-            resources_left = playout_moves_left;
+            ASSERT(Hex::Params::resources_part <= 1.0);
+            resources_left = Hex::Params::resources_part * playout_moves_left;
             break;
         case kManagementTime:
-            resources_left = time_left;
+            ASSERT(Hex::Params::resources_part <= 1.0);
+            resources_left = Hex::Params::resources_part * time_left;
             timer.Start();
             break;
+        case kManagementPlayoutMovesPerMove:
+            resources_left = pmoves_per_move;
     }
+
     resources_used = 0;
 }
 
 bool TimeManager::NewPlayout(uint empties)
 {
-    if (management == kManagementPlayoutsPerMove)
-        return resources_left--;
+    if (resources_used >= resources_left)
+        return false;
 
-    if (management == kManagementTime)
-        resources_used = timer.State();
-
-    ASSERT(Hex::Params::resources_part <= 1.0);
-    bool permission = (resources_used < Hex::Params::resources_part * resources_left);
-
-    if (management == kManagementPlayoutMovesPerGame)
-        resources_used += empties;
-
-    return permission;
+    switch (management) {
+        case kManagementPlayoutsPerMove:
+            ++resources_used;
+            break;
+        case kManagementPlayoutMovesPerMove:
+        case kManagementPlayoutMovesPerGame:
+            resources_used += empties;
+            break;
+        case kManagementTime:
+            resources_used = timer.State();
+            break;
+    }
+    return true;
 }
 
 void TimeManager::EndMove()
 {
     switch (management) {
-        case kManagementPlayoutsPerMove:
-            break;
         case kManagementPlayoutMovesPerGame:
             playout_moves_left = (resources_used > playout_moves_left ? 0 : playout_moves_left - resources_used);
             break;
-        case kManagementTime:
+        case kManagementTime: {
             uint used = timer.State();
             time_left = (used > time_left ? 0 : time_left - used);
             break;
+        }
+        default:
+            break;
     }
+    ++current_move;
 }

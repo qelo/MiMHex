@@ -24,6 +24,7 @@ Protocol::Protocol() {
     gtp.Register ("set_playouts_per_move", Gtp::GetSetCallback(&game.GetTimeManager().playouts_per_move));
     gtp.Register ("playout_moves_left", Gtp::GetSetCallback(&game.GetTimeManager().playout_moves_left));
     gtp.Register ("time_left", Gtp::GetSetCallback(&game.GetTimeManager().time_left));
+    gtp.Register ("playout_moves_per_move", Gtp::GetSetCallback(&game.GetTimeManager().pmoves_per_move));
 }
 
 void Protocol::Run(std::istream& in, std::ostream& out) {
@@ -139,12 +140,14 @@ void Protocol::CTimeManagement(Gtp::Io& inout) {
     if (inout.IsEmpty()) {
         inout.out << game.GetTimeManager().management << '\n';
         inout.out << kManagementPlayoutsPerMove << ' ' << "playouts per move\n";
-        inout.out << kManagementPlayoutMovesPerGame << ' ' << "playout moves per game\n";
-        inout.out << kManagementTime << ' ' << "time";
+        inout.out << kManagementTime << ' ' << "time\n";
+        inout.out << kManagementPlayoutMovesPerMove << ' ' << "playout moves per move\n";
+        inout.out << kManagementPlayoutMovesPerGame << ' ' << "playout moves per game";
         return;
     }
     uint choice = inout.Read<uint>();
     inout.CheckEmpty();
+    ASSERT(choice < kManagementTypes);
     game.GetTimeManager().management = TimeManagementType(choice);
 }
 

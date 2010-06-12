@@ -20,9 +20,12 @@ private:
 
 enum TimeManagementType {
     kManagementPlayoutsPerMove = 0,
-    kManagementPlayoutMovesPerGame = 1,
-    kManagementTime = 2
+    kManagementTime = 1,
+    kManagementPlayoutMovesPerMove = 2,
+    kManagementPlayoutMovesPerGame = 3
 };
+
+const static uint kManagementTypes = 4;
 
 struct TimeManager
 {
@@ -36,12 +39,14 @@ struct TimeManager
     uint time_left;
     uint64 playout_moves_left;
     uint playouts_per_move;
+    uint64 pmoves_per_move;
 
 private:
     Timer timer;
 
     uint64 resources_left;
     uint64 resources_used;
+    uint current_move;
 };
 
 #endif
