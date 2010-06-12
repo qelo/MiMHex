@@ -4,9 +4,8 @@ ENABLE_TESTING ()
 
 PROJECT (MIMHEX)
 
-ADD_DEFINITIONS ("-ansi")
-ADD_DEFINITIONS ("-W -Wall -Wextra")
-ADD_DEFINITIONS ("-O3 -fomit-frame-pointer")
+SET (CMAKE_CXX_FLAGS "-ansi -W -Wall -Wextra -fomit-frame-pointer -O2")
+SET (CMAKE_CXX_FLAGS_DEBUG "-DINSERT_ASSERTIONS -g")
 
 ADD_SUBDIRECTORY (main)
 ADD_SUBDIRECTORY (patterns)

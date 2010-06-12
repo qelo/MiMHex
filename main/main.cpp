@@ -1,5 +1,3 @@
-#define INSERT_ASSERTIONS
-
 #include "switches.cpp"
 #include "board.cpp"
 #include "board_dim.cpp"
