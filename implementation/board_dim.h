@@ -50,7 +50,9 @@ class Dim {
         /**
          * An array containing all the directions. Used by FOR_SIX() macro.
          */
-        static const int neighbours[6];
+        static const uint neighbours_size = 6;
+        static const int neighbours[neighbours_size];
+
 
         /**
          * Special values that can be added to positions in order to get another,

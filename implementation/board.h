@@ -162,6 +162,11 @@ class Board {
 
         void ClearShortestPathsStats();
 
+        /**
+         * Check if position is really attacked bridge for player
+         */
+        bool IsAttackedBridge(uint pos) const;
+
     public:
         void UpdatePathsStatsFloodFillFU(Board& aBoard, const Player& winner);
         void UpdatePathsStatsFloodFillBFS(Board& aBoard, const Player& winner);
@@ -274,9 +279,18 @@ class Board {
 
         /**
          * The array holds positions of all attacked bridges in the board.
-         * By a simple estimate there can only be up to 1/2 such fields.
          */
-        SmallSet<ushort, Dim::field_count / 3> attacked_bridges;
+        ushort attacked_bridges[Dim::field_count];
+
+        /**
+         * Number of elements in attacked_bridges
+         */
+        uint attacked_bridges_count;
+
+        /**
+         * Random element of attacked_bridges
+         */
+        uint random_attacked_bridge;
 
         /**
          * Moves left until the board is full.

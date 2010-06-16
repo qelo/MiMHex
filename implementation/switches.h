@@ -25,7 +25,7 @@ class Switches {
         }
 
         static bool IsDefendingBridges() {
-            return avoidingBridgesOn;
+            return defendingBridgesOn;
         }
 
         static bool PatternsUsed() {

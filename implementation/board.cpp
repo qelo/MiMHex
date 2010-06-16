@@ -51,10 +51,12 @@ bool Board::IsEmpty(ushort val) {
 }
 
 bool Board::SamePlayer(ushort val, ushort val2) {
-    return (val & board_second) == (val2 & board_second) && val2 != 0;
+    //ASSERT(!IsEmpty(val) && !IsEmpty(val2));
+    return (val & board_second) == (val2 & board_second);
 }
 
 bool Board::OppPlayer(ushort val, ushort val2) {
+    //ASSERT(!IsEmpty(val) && !IsEmpty(val2));
     return (val & board_second) ^ (val2 & board_second);
 }
 
@@ -578,8 +580,53 @@ void Board::PlayLegal(const Move& move) {
 
     uint replace_pos = RemoveFree(pos);
 
-    if(Switches::IsAvoidingBridges() || Switches::IsDefendingBridges())
+    if(Switches::IsAvoidingBridges())
         UpdateBridgeData(pos, replace_pos);
+
+    if (Switches::IsDefendingBridges()) {
+        // Detect attacks on bridges
+        ushort attacker = board[pos];
+        for (uint i = 0; i < Dim::neighbours_size; ++i) {
+            int dir = Dim::neighbours[i];
+            uint cur = pos + dir;
+            uint next = pos + Dim::Clockwise(dir);
+            uint prev = pos + Dim::CClockwise(dir);
+
+            ushort bcur = board[cur];
+            if (!IsEmpty(bcur)) {
+                //Optimization with negative effect (?)
+                //if (SamePlayer(bcur, attacker))
+                //    ++i;
+                continue;
+            }
+
+            ushort bnext = board[next];
+            if (IsEmpty(bnext) || SamePlayer(bnext, attacker)) {
+                //There is no chance for attacked bridge for two next neighbours
+                i += 2;
+                continue;
+            }
+
+            ushort bprev = board[prev];
+            if (!IsEmpty(bprev) && OppPlayer(bprev, attacker)) {
+                ASSERT(attacked_bridges_count < sizeof(attacked_bridges) / sizeof(*attacked_bridges));
+                attacked_bridges[attacked_bridges_count++] = cur;
+            }
+
+            //Next neighbour is not attacked because board[cur] is empty
+            ++i;
+        }
+
+        while (attacked_bridges_count) {
+            ushort rand = Rand::next_rand(attacked_bridges_count);
+            random_attacked_bridge = attacked_bridges[rand];
+            if (IsEmpty(board[random_attacked_bridge]))
+                break;
+
+            attacked_bridges[rand] = attacked_bridges[--attacked_bridges_count];
+
+        }
+    }
 }
 
 void Board::UpdateBridgeData (uint pos, uint replace_pos) {
@@ -661,6 +708,7 @@ void Board::Load (const Board& board) {
 }
 
 Board::Board():
+        attacked_bridges_count(0),
         moves_left(Dim::field_count),
         bridge_range(Dim::field_count - 1),
         current(Player::First()) {
@@ -687,21 +735,21 @@ void Board::UpdateBridges(uint pos) {
     for (; !it.IsEnd(); ++it) {
         uint br = BridgeToPos(*it);
         // Check if the bridge owner and the new pawn owner are different.
-        if (Switches::IsDefendingBridges()) {
-            if (OppPlayer(*it, val))
-                // An attacked bridge has been detected.
-                attacked_bridges.Insert(br);
-        }
+//        if (Switches::IsDefendingBridges()) {
+//            if (OppPlayer(*it, val))
+//                // An attacked bridge has been detected.
+//                attacked_bridges.Insert(br);
+//        }
 
         // Remove the bridge from the neighbouring field.
         bridge_conn[br].Remove(ToBridge(pos, *it));
     }
 
-    if (Switches::IsDefendingBridges()) {
-        // As the bridges inside the pos are no longer valid remove it also from
-        // the attacked bridges list.
-        attacked_bridges.Remove(pos);
-    }
+//    if (Switches::IsDefendingBridges()) {
+//        // As the bridges inside the pos are no longer valid remove it also from
+//        // the attacked bridges list.
+//        attacked_bridges.Remove(pos);
+//    }
 
     // Detect bridges around position pos.
     FOR_SIX(int dir) {
@@ -793,11 +841,24 @@ bool Board::IsValidMove(const Move& move) const {
            (moves_left % 2 == 1 && move.GetPlayer() == Player::First()));
 }
 
+bool Board::IsAttackedBridge(uint pos) const {
+    FOR_SIX(int dir) {
+        uint bcur = board[pos + dir];
+        uint bnext = board[pos + Dim::Clockwise(dir)];
+        uint bprev = board[pos + Dim::CClockwise(dir)];
+        if (!IsEmpty(bcur) && !IsEmpty(bnext) && !IsEmpty(bprev) &&
+                SamePlayer(bprev, bnext) && OppPlayer(bprev, bcur))
+            return true;
+    }
+    return false;
+}
+
 Move Board::GenerateMoveUsingKnowledge(const Player& player) const {
     if (Switches::IsDefendingBridges()) {
-        if (!attacked_bridges.Empty()) {
-            Move m = Move(player, Location(attacked_bridges.RandomElem()));
-            return m;
+        if (attacked_bridges_count) {
+            if (!IsAttackedBridge(random_attacked_bridge))
+                std::cerr << player.ToString() << ' ' << ToAsciiArt(Location(random_attacked_bridge)) << std::endl;
+            return Move(player, Location(random_attacked_bridge));
         }
     }
     if (Switches::PatternsUsed())
