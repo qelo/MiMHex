@@ -31,7 +31,7 @@ class MCTSTree {
          * finished
          * @return The winner of the finished game.
          */
-        Player RandomFinish(Board& board, uint* history, uint level);
+        Player RandomFinish(Board& board, uint* history, uint & level);
 
         void SetMaxDepth(uint depth);
 
