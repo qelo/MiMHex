@@ -162,7 +162,7 @@ void MCTSNode::Expand(const Board& board) {
         if (i != j)
             std::swap(chosen_children[i], chosen_children[j]);
     }
-    chosen_count = std::min(2u, count);
+    chosen_count = std::min(Params::chosen_count_init, count);
 }
 
 void MCTSNode::Update(bool won) {

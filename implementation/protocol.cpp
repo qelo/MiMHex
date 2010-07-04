@@ -25,6 +25,8 @@ Protocol::Protocol() {
     gtp.Register ("playout_moves_left", Gtp::GetSetCallback(&game.GetTimeManager().playout_moves_left));
     gtp.Register ("time_left", Gtp::GetSetCallback(&game.GetTimeManager().time_left));
     gtp.Register ("playout_moves_per_move", Gtp::GetSetCallback(&game.GetTimeManager().pmoves_per_move));
+    gtp.Register ("param_chosen_count_init", Gtp::GetSetCallback(&Params::chosen_count_init));
+    gtp.Register ("param_chosen_count_step", Gtp::GetSetCallback(&Params::chosen_count_step));
 }
 
 void Protocol::Run(std::istream& in, std::ostream& out) {

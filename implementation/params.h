@@ -11,6 +11,8 @@ public:
     static unsigned initialization;
     static unsigned bridgeWeight;
     static double resources_part;
+    static uint chosen_count_step;
+    static uint chosen_count_init;
 };
 
 } // namespace Hex
