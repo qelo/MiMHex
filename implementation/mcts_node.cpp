@@ -76,23 +76,24 @@ Move MCTSNode::GetMove() const {
 }
 
 float MCTSNode::GetValue(int playouts_left) const {
-    if (!computed) {
-        computed = true;
-        value = ucb.GetValue() * GetUcbWeight();
-        if (Switches::Rave())
-            value += rave.GetValue() * GetRaveWeight();
-        if (Switches::PathRave())
-            value += path.GetValue() * GetRaveWeight();
-        if (Switches::PathAmaf())
-            value += path.GetValue() * GetAmafWeight();
-    }
+//    if (!computed) {
+//        computed = true;
+//        value = ucb.GetValue() * GetUcbWeight();
+//        if (Switches::Rave())
+//            value += rave.GetValue() * GetRaveWeight();
+//        if (Switches::PathRave())
+//            value += path.GetValue() * GetRaveWeight();
+//        if (Switches::PathAmaf())
+//            value += path.GetValue() * GetAmafWeight();
+//    }
     if (playouts_left >= 0) {
         //float old_value = value;
-        value = std::min((static_cast<float>(ucb.GetWon()) + playouts_left) / (ucb.GetPlayed() + playouts_left), value);
+        return (static_cast<float>(ucb.GetWon()) + playouts_left) / (ucb.GetPlayed() + playouts_left);
         //if (old_value < 1.0f && value + 0.05 < old_value)
         //    std::cerr << playouts_left << ' ' << ucb.GetPlayed() << ' ' << old_value << ' ' << value << std::endl;
+    } else {
+        return ucb.GetMu();
     }
-    return value;
 }
 
 float MCTSNode::Best() const {
