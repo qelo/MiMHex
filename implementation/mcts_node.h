@@ -144,6 +144,16 @@ class MCTSNode {
         AutoTable<MCTSNode*> pos_to_child;
 
         /**
+         * Children chosen to exploration
+         */
+        AutoTable<MCTSNode*> chosen_children;
+
+        /**
+         * The number of children chosen do exploration so far
+         */
+        uint chosen_count;
+
+        /**
          * A field used for memoization of Compute() method.
          */
         mutable float value;

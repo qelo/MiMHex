@@ -12,7 +12,7 @@ MCTSNode::MCTSNode():
     ucb(Params::initialization, 2 * Params::initialization),
     rave(Params::initialization, 2 * Params::initialization),
     path(Params::initialization, 2 * Params::initialization),
-    children(NULL),
+    children(NULL), chosen_children(NULL),
     computed(false) {}
 
 MCTSNode::MCTSNode(const Board& board):
@@ -21,7 +21,7 @@ MCTSNode::MCTSNode(const Board& board):
     path(Params::initialization, 2 * Params::initialization),
     loc(0),
     count(board.MovesLeft()),
-    children(NULL),
+    children(NULL), chosen_children(NULL),
     computed(false) {}
 
 MCTSNode* MCTSNode::SelectBestChild() const {
@@ -43,13 +43,15 @@ MCTSNode* MCTSNode::SelectBestChild() const {
 MCTSNode* MCTSNode::SelectChild() const {
 
     ASSERT(count > 0);
+    ASSERT(chosen_children.GetPointer());
+    ASSERT(chosen_count > 0);
 
-    MCTSNode* best = &children[0];
+    MCTSNode* best = chosen_children[0];
     float best_val = best->GetValue();
-    for (uint i = 1; i < count; ++i) {
-        float val = children[i].GetValue();
+    for (uint i = 1; i < chosen_count; ++i) {
+        float val = chosen_children[i]->GetValue();
         if (val > best_val) {
-            best = &children[i];
+            best = chosen_children[i];
             best_val = val;
         }
     }
@@ -143,6 +145,7 @@ void MCTSNode::Expand(const Board& board) {
     const ushort* empty = board.GetEmpty();
     /// Allocate actual children nodes.
     children = new MCTSNode[count];
+    chosen_children = new MCTSNode*[count];
     /// Allocate the position dictionary.
     pos_to_child = new MCTSNode*[Dim::actual_field_count];
     for (uint i = 0; i < count; ++i) {
@@ -151,7 +154,15 @@ void MCTSNode::Expand(const Board& board) {
         children[i].count = count - 1;
         /// Fill in dictionary entry.
         pos_to_child[empty[i]] = &children[i];
+        chosen_children[i] = &children[i];
     }
+
+    for (uint i = 0; i < count; ++i) {
+        uint j = Rand::next_rand(count);
+        if (i != j)
+            std::swap(chosen_children[i], chosen_children[j]);
+    }
+    chosen_count = std::min(2u, count);
 }
 
 void MCTSNode::Update(bool won) {
@@ -175,6 +186,9 @@ void MCTSNode::Update(bool won, uint* begin, uint* end) {
             GetChildByPos(*it)->Update(!won);
         }
     }
+
+    if (chosen_count < count && ucb.GetPlayed() > Params::chosen_count_step * (chosen_count - Params::chosen_count_init + 1))
+        ++chosen_count;
 
     // TODO: Implement PATH-RAVE here. Use Switches.
 }
@@ -211,6 +225,7 @@ void MCTSNode::RecursivePrint(std::ostream& stream, uint max_children, uint max_
             stream << " rave: " << 1.0f - rave.GetMu();
         if (Switches::PathAmaf())
             stream << " path: " << 1.0f - path.GetMu();
+
     } else {
         stream << "ev: " << GetValue() << " mu: " << ucb.GetMu();
         stream << " won: " << ucb.GetMu() * 100.0f << "%";\
@@ -219,6 +234,7 @@ void MCTSNode::RecursivePrint(std::ostream& stream, uint max_children, uint max_
         if (Switches::PathAmaf())
             stream << " path: " << path.GetMu();
     }
+    stream << " cc: " << chosen_count;
     stream << " all: " << ucb.GetPlayed();
     stream << std::endl;
 
