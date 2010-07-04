@@ -28,9 +28,10 @@ class MCTSNode {
         MCTSNode* SelectBestChild() const;
 
         /**
+         * @in @param playouts_left Playouts left information for possible cuts
          * @return The child node for the optimal exploration move.
          */
-        MCTSNode* SelectChild() const;
+        MCTSNode* SelectChild(int playouts_left = -1) const;
 
         /**
          * @in @param pos A position on the board. Must be empty.
@@ -88,7 +89,7 @@ class MCTSNode {
          * computed fields and indirectly through memoiziation used in the
          * Statistics class.
          */
-        float GetValue() const;
+        float GetValue(int playouts_left = -1) const;
 
         /**
          * @return The current move final assessment.

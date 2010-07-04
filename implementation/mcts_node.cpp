@@ -40,14 +40,14 @@ MCTSNode* MCTSNode::SelectBestChild() const {
     return best;
 }
 
-MCTSNode* MCTSNode::SelectChild() const {
+MCTSNode* MCTSNode::SelectChild(int playouts_left) const {
 
     ASSERT(count > 0);
 
     MCTSNode* best = &children[0];
-    float best_val = best->GetValue();
+    float best_val = best->GetValue(playouts_left);
     for (uint i = 1; i < count; ++i) {
-        float val = children[i].GetValue();
+        float val = children[i].GetValue(playouts_left);
         if (val > best_val) {
             best = &children[i];
             best_val = val;
@@ -75,7 +75,7 @@ Move MCTSNode::GetMove() const {
     return Move(GetPlayer(), loc);
 }
 
-float MCTSNode::GetValue() const {
+float MCTSNode::GetValue(int playouts_left) const {
     if (!computed) {
         computed = true;
         value = ucb.GetValue() * GetUcbWeight();
@@ -85,6 +85,12 @@ float MCTSNode::GetValue() const {
             value += path.GetValue() * GetRaveWeight();
         if (Switches::PathAmaf())
             value += path.GetValue() * GetAmafWeight();
+    }
+    if (playouts_left >= 0) {
+        //float old_value = value;
+        value = std::min((static_cast<float>(ucb.GetWon()) + playouts_left) / (ucb.GetPlayed() + playouts_left), value);
+        //if (old_value < 1.0f && value + 0.05 < old_value)
+        //    std::cerr << playouts_left << ' ' << ucb.GetPlayed() << ' ' << old_value << ' ' << value << std::endl;
     }
     return value;
 }

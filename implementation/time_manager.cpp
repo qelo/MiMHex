@@ -63,10 +63,13 @@ void TimeManager::NewMove()
     }
 
     resources_used = 0;
+    current_playout = -1;
 }
 
 bool TimeManager::NewPlayout(uint empties)
 {
+    ++current_playout;
+
     if (resources_used >= resources_left)
         return false;
 
@@ -100,4 +103,12 @@ void TimeManager::EndMove()
             break;
     }
     ++current_move;
+}
+
+int TimeManager::PlayoutsLeft()
+{
+    if (current_playout < 10)
+        return -1;
+
+    return resources_left * current_playout / resources_used - current_playout + 1;
 }

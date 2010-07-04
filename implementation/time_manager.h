@@ -34,6 +34,12 @@ struct TimeManager
     bool NewPlayout(uint);
     void EndMove();
 
+    /**
+     * Estimate playouts left in current move
+     * Return value -1 means there is no way to predict it
+     */
+    int PlayoutsLeft();
+
     TimeManagementType management;
 
     uint time_left;
@@ -46,6 +52,7 @@ private:
 
     uint64 resources_left;
     uint64 resources_used;
+    uint current_playout;
     uint current_move;
 };
 

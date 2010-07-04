@@ -45,12 +45,13 @@ Move MCTSTree::BestMove(const Board& board) {
 
     time_manager.NewMove();
     while (time_manager.NewPlayout(board.MovesLeft())) {
+        uint playouts_left = time_manager.PlayoutsLeft();
 
         level = 1;
         node = root.GetPointer();
         brd.Load(board);
         while (!node->IsLeaf()) {
-            node = node->SelectChild();
+            node = node->SelectChild(playouts_left);
             ASSERT(brd.CurrentPlayer() == node->GetPlayer());
             Move move = node->GetMove();
             brd.PlayLegal(move);
@@ -63,7 +64,7 @@ Move MCTSTree::BestMove(const Board& board) {
         if (level < max_depth && node->GetPlayed() >= visits_to_expand
                               && brd.MovesLeft() > 0) {
             node->Expand(brd);
-            node = node->SelectChild();
+            node = node->SelectChild(playouts_left);
             ASSERT(brd.CurrentPlayer() == node->GetPlayer());
             Move move = node->GetMove();
             brd.PlayLegal(move);
