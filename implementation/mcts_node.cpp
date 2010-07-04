@@ -13,7 +13,8 @@ MCTSNode::MCTSNode():
     rave(Params::initialization, 2 * Params::initialization),
     path(Params::initialization, 2 * Params::initialization),
     children(NULL),
-    computed(false) {}
+    computed(false),
+    blocked(false) {}
 
 MCTSNode::MCTSNode(const Board& board):
     ucb(Params::initialization, 2 * Params::initialization),
@@ -22,7 +23,8 @@ MCTSNode::MCTSNode(const Board& board):
     loc(0),
     count(board.MovesLeft()),
     children(NULL),
-    computed(false) {}
+    computed(false),
+    blocked(false) {}
 
 MCTSNode* MCTSNode::SelectBestChild() const {
 
@@ -44,15 +46,24 @@ MCTSNode* MCTSNode::SelectChild() const {
 
     ASSERT(count > 0);
 
-    MCTSNode* best = &children[0];
-    float best_val = best->GetValue();
-    for (uint i = 1; i < count; ++i) {
-        float val = children[i].GetValue();
-        if (val > best_val) {
-            best = &children[i];
-            best_val = val;
+    if (count == 1)
+        return &children[0];
+
+    MCTSNode *best = NULL;
+    float best_val = 0.0;
+    for (uint i = 0; i < count; ++i) {
+        if (children[i].blocked)
+            children[i].blocked = false;
+        else {
+            float val = children[i].GetValue();
+            if (!best || val > best_val) {
+                best = &children[i];
+                best_val = val;
+            }
         }
     }
+    ASSERT(best);
+    best->blocked = true;
     return best;
 }
 

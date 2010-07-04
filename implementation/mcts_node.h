@@ -152,6 +152,11 @@ class MCTSNode {
          * True if the field value is valid.
          */
         mutable bool computed;
+
+        /**
+         * Block node not to select it twice in a row
+         */
+        mutable bool blocked;
 };
 
 } // namespace Hex
