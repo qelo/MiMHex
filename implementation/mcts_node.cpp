@@ -105,11 +105,12 @@ uint MCTSNode::GetPlayed() const {
 }
 
 float MCTSNode::GetUcbWeight() const {
-    ASSERT(ucb.GetPlayed() > 0);
+    //ASSERT(ucb.GetPlayed() > 0);
     /// Use increasing UCB weight if any RAVE or AMAF technique is used.
-    if (Switches::Rave() || Switches::PathRave() || Switches::PathAmaf())
-        return static_cast<float>(ucb.GetPlayed())
-               / (Params::beta + static_cast<float>(ucb.GetPlayed()));
+    if (Switches::Rave() || Switches::PathRave() || Switches::PathAmaf()) {
+        float played = static_cast<float>(ucb.GetPlayed() + rave.GetPlayed());
+        return played / (Params::beta + played);
+    }
     else
         return 1.0f;
 }
