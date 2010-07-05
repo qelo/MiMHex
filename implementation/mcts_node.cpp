@@ -187,8 +187,24 @@ void MCTSNode::Update(bool won, uint* begin, uint* end) {
         }
     }
 
-    if (chosen_count < count && ucb.GetPlayed() > Params::chosen_count_step * (chosen_count - Params::chosen_count_init + 1))
+    if (!IsLeaf() && chosen_count < count &&
+            ucb.GetPlayed() > Params::chosen_count_step * (chosen_count - Params::chosen_count_init + 1)) {
+        if (Switches::Rave()) {
+            uint best = chosen_count;
+            float best_val = chosen_children[best]->rave.GetValue();
+            for (uint i = chosen_count; i < count; ++i) {
+                float val = chosen_children[i]->rave.GetValue();
+                if (val > best_val) {
+                    best = i;
+                    best_val = val;
+                }
+            }
+
+            if (best != chosen_count)
+                std::swap(chosen_children[chosen_count], chosen_children[best]);
+        }
         ++chosen_count;
+    }
 
     // TODO: Implement PATH-RAVE here. Use Switches.
 }

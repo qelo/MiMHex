@@ -9,6 +9,6 @@ unsigned Params::initialization = 1;
 unsigned Params::bridgeWeight = 128;
 double Params::resources_part = 0.09;
 uint Params::chosen_count_init = 2;
-uint Params::chosen_count_step = 50;
+uint Params::chosen_count_step = 10;
 
 }
